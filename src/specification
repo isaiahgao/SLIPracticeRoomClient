@@ -1,0 +1,5 @@
+rooms/get/{ROOMID} - return status of room, true or false
+rooms/post/{ROOMID} - check out or check in the room
+	json for option
+	exception if it's been checked out already if checking in
+
