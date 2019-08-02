@@ -1,7 +1,6 @@
 package jhunions.isaiahgao.client;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -12,11 +11,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import jhunions.isaiahgao.common.ScanResult;
+import jhunions.isaiahgao.common.ScanResultPacket;
+import jhunions.isaiahgao.common.ScanResultPacket.ScanResult;
 import jhunions.isaiahgao.common.User;
 
 public class IO {
@@ -37,14 +38,15 @@ public class IO {
 	
 	public enum RequestType {
 		POST,
-		PUT
+		PUT,
+		DELETE
 	}
 	
-	public static String sendRequest(RequestType type, String urlpath) throws Exception {
+	public static Response sendRequest(RequestType type, String urlpath) throws Exception {
 		return sendRequest(type, urlpath, null);
 	}
 	
-	public static String sendRequest(RequestType type, String urlpath, String body) throws Exception {
+	public static Response sendRequest(RequestType type, String urlpath, String body) throws Exception {
 		URL obj = new URL(HOST + urlpath);
 		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
@@ -66,6 +68,7 @@ public class IO {
 		 
 		int responseCode = con.getResponseCode();
 		System.out.println("\nSending " + type.toString() + " request to URL : " + HOST);
+		System.out.println("Body: " + body);
 		System.out.println("Response Code : " + responseCode);
 
 		BufferedReader in = new BufferedReader(
@@ -80,23 +83,22 @@ public class IO {
 
 		String result = response.toString();
 		System.out.println(result);
-		return result;
+		return new Response(responseCode, result);
 	}
 	
-	public static Future<ScanResult> scanId(String id, String room) {
+	public static Future<ScanResultPacket> scanId(String id, String room) {
 		return EXE.submit(() -> {
 			try {
-				String result = sendRequest(RequestType.POST, "/rooms/" + room, "{\"cardnumber\":\"" + id + "\"," + Main.getAuthHandler().getAuthJson() + "}");
-				return ScanResult.fromJson(result);
+				String result = sendRequest(RequestType.POST, "/rooms/" + room, "{\"cardnumber\":\"" + id + "\"," + Main.getAuthHandler().getAuthJson() + "}").result;
+				return new ScanResultPacket(result);
 			} catch (Exception e) {
-				return ScanResult.ERROR;
+				return new ScanResultPacket(ScanResult.ERROR, null);
 			}
 		});
 	}
 	
 
 	public static void synchronize() {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -113,7 +115,8 @@ public class IO {
 	public static Future<Boolean> push(User usd) {
 		return EXE.submit(() -> {
 			try {
-				sendRequest(RequestType.POST, "/users", usd.toString());
+				String usds = usd.toString();
+				sendRequest(RequestType.POST, "/users", usds.substring(0, usds.length() - 1) + "," + Main.getAuthHandler().getAuthJson() + "}");
 			} catch (Exception e) {
 				e.printStackTrace();
 				return false;
@@ -122,19 +125,38 @@ public class IO {
 		});
 	}
 
-	public static User getUserData(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+	public static @Nullable Future<User> getUserData(String userId) {
+		return EXE.submit(() -> {
+			try {
+				String result = sendRequest(RequestType.PUT, "/users/" + userId, "{ "+ Main.getAuthHandler().getAuthJson() + "}").result;
+				return new User(result);
+			} catch (Exception e) {
+				return null;
+			}
+		});
 	}
 
-	public static void removeUserData(String currentId) {
-		// TODO Auto-generated method stub
-		
+	public static Future<Boolean> removeUserData(String currentId) {
+		return EXE.submit(() -> {
+			try {
+				Response response = sendRequest(RequestType.DELETE, "/users/" + currentId, "{ "+ Main.getAuthHandler().getAuthJson() + "}");
+				if (response.code != 200)
+					return false;
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		});
 	}
-
-	public static void scan(User usd, int buttonPressed) {
-		// TODO Auto-generated method stub
+	
+	public static class Response {
+		public Response(int code, String result) {
+			this.code = code;
+			this.result = result;
+		}
 		
+		public int code;
+		public String result;
 	}
 
 }

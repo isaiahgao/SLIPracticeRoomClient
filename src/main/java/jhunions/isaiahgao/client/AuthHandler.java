@@ -33,7 +33,8 @@ public class AuthHandler {
 	
 	public String getAuthJson() {
 		JsonNode node = Main.getJson().createObjectNode().set("key", JsonNodeFactory.instance.textNode(auth));
-		return node.toString();
+		String str = node.toString();
+		return str.substring(1, str.length() - 1);
 	}
 
 }

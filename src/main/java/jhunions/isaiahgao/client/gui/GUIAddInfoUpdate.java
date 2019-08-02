@@ -1,6 +1,7 @@
 package jhunions.isaiahgao.client.gui;
 
 import java.awt.event.ActionEvent;
+import java.util.concurrent.ExecutionException;
 
 import jhunions.isaiahgao.client.IO;
 import jhunions.isaiahgao.client.Main;
@@ -24,11 +25,17 @@ public class GUIAddInfoUpdate extends GUIAddInfo {
     }
     
     private void postSetup() {
-        User usd = IO.getUserData(this.userId);
-        this.promptFirstName.setText(usd.getName().getFirstName());
-        this.promptLastName.setText(usd.getName().getLastName());
-        this.promptJHED.setText(usd.getJhed());
-        this.promptPhoneNumber.setText(Long.toString(usd.getPhone()));
+        User usd;
+		try {
+			usd = IO.getUserData(this.userId).get();
+	        this.promptFirstName.setText(usd.getName().getFirstName());
+	        this.promptLastName.setText(usd.getName().getLastName());
+	        this.promptJHED.setText(usd.getJhed());
+	        this.promptPhoneNumber.setText(Long.toString(usd.getPhone()));
+		} catch (InterruptedException | ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     @Override

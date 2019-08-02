@@ -32,6 +32,7 @@ public final class Main {
     }
     
     public Main() {
+    	
     }
     
     private static AuthHandler auth = new AuthHandler();

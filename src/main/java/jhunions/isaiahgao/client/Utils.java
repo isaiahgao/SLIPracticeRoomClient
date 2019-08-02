@@ -31,6 +31,14 @@ public class Utils {
         return "<html>" + (center ? "<center>" : "") + "<font face=\"" + fontStyle + "\"><span style='font-size:" + fontSize + "px'>" + msg.replace("\\n", "<br>") + "</span></font>" + (center ? "</center>" : "") + "</html>";
     }
     
+    public static int parseInt(String str, int def) {
+    	try {
+    		return Integer.parseInt(str);
+    	} catch (NumberFormatException e) {
+    		return def;
+    	}
+    }
+    
     public static String capitalizeFirst(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
     }

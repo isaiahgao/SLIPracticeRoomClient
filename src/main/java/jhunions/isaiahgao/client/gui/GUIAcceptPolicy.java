@@ -100,11 +100,12 @@ public class GUIAcceptPolicy extends GUI implements ActionListener, WindowListen
                 	}
                     Sound.REGISTER_SUCCESSFUL.play();
                 }
-                this.instance.getBaseGUI().confirmAction(usd);
+                this.instance.getBaseGUI().scanID(usd.getHopkinsID());
                 this.accepted = true;
                 this.frame.dispose();
                 this.instance.sendDisappearingConfirm(msg, 115);
             } catch (Exception ex) {
+            	ex.printStackTrace();
                 this.instance.sendMessage("Invalid info. Please try again.");
             }
         }

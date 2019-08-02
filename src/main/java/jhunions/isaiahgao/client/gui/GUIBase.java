@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -20,23 +21,34 @@ import javax.swing.KeyStroke;
 
 import jhunions.isaiahgao.client.IO;
 import jhunions.isaiahgao.client.Main;
+import jhunions.isaiahgao.client.SoundHandler.Sound;
 import jhunions.isaiahgao.client.Utils;
 import jhunions.isaiahgao.client.Graphics.PracticeRoomButton;
 import jhunions.isaiahgao.client.data.InputCollector;
 import jhunions.isaiahgao.client.listener.PRButtonListener;
-import jhunions.isaiahgao.common.ScanResult;
+import jhunions.isaiahgao.common.ScanResultPacket;
 import jhunions.isaiahgao.common.User;
 
 public class GUIBase extends GUI implements ActionListener {
     
     public static void main(String[] args) {
-        new GUIBase(new Main());
+    	Main main = new Main();
+        GUIBase base = new GUIBase(main);
+    	try {
+    		Field f = Main.class.getDeclaredField("base");
+    		f.setAccessible(true);
+    		f.set(main, base);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+        base.buttonPressed = 112;
+        base.scanID("6010675001431720");
     }
 
     private static final long serialVersionUID = 2161473071392557910L;
 
     public GUIBase(Main instance) {
-        super(instance, "JHUnions Practice Rooms v1.0", 1280, 1024, JFrame.EXIT_ON_CLOSE, true);
+        super(instance, "JHUnions Practice Rooms v1.1.0", 1280, 1024, JFrame.EXIT_ON_CLOSE, true);
         this.setBackground(new Color(18, 18, 42));
         //this.frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
@@ -63,23 +75,23 @@ public class GUIBase extends GUI implements ActionListener {
         return this.isManual;
     }
     
-    public synchronized String getCurrentId() {
+    public String getCurrentId() {
         return curId;
     }
 
-    public synchronized JButton getButtonByID(int num) {
+    public JButton getButtonByID(int num) {
         return this.buttons.get(num);
     }
 
-    public synchronized int getPressedButtonID() {
+    public int getPressedButtonID() {
         return this.buttonPressed;
     }
 
-    public synchronized JButton getPressedButton() {
+    public JButton getPressedButton() {
         return this.buttonPressed == 0 ? null : this.buttons.get(this.buttonPressed);
     }
 
-    public synchronized void setPressedButton(JButton butt) {
+    public void setPressedButton(JButton butt) {
         if (this.buttonPressed != 0) {
             JButton curbutt = this.getPressedButton();
             curbutt.setSelected(false);
@@ -92,27 +104,78 @@ public class GUIBase extends GUI implements ActionListener {
     public void setButtonEnabled(int button, boolean enabled) {
         this.buttons.get(button).setEnabled(enabled);
     }
-
+    
     public void scanID(String id) {
         System.out.println("Scanned ID: " + id);
         this.curId = id;
-
-        ScanResult result;
-        try {
-        	result = IO.scanId(id, this.buttonPressed + "").get();
-        } catch (Exception e) {
-        	result = ScanResult.ERROR;
+        
+        // handle special buttons
+        // this one is unused
+        if (this.getPressedButtonID() == -1) {
+            if (IO.getUserData(this.getCurrentId()) == null) {
+                this.instance.sendMessage("You can't remove your info from our database\\nbecause you're not registered with JHUnions!");
+                this.setPressedButton(null);
+                return;
+            }
+            
+            // send confirmation about unregistering
+            this.instance.sendConfirm("Are you sure you want to unregister?", null, new Runnable() {
+                @Override
+                public void run() {
+                	IO.removeUserData(GUIBase.this.getCurrentId());
+                    GUIBase.this.setPressedButton(null);
+                }
+            });
+            return;
         }
         
-        switch (result) {
+        // update user info button
+        if (this.getPressedButtonID() == -2) {
+            System.out.println("curid: " + this.getCurrentId());
+            // update user info
+            if (IO.getUserData(this.getCurrentId()) == null) {
+                // if they're not in system, prompt to register instead
+                new GUIAddInfoRegister(this.instance, this.getCurrentId(), this);
+            } else {
+                new GUIAddInfoUpdate(this.instance, this.getCurrentId(), this);
+            }
+            this.setPressedButton(null);
+            return;
+        }
+
+        // otherwise, try to sign in
+        ScanResultPacket resultpacket;
+        try {
+        	resultpacket = IO.scanId(id, this.buttonPressed + "").get();
+        } catch (Exception e) {
+        	resultpacket = ScanResultPacket.ERROR;
+        }
+        
+        switch (resultpacket.getResult()) {
 	        case NO_SUCH_USER:
 	        	new GUIPromptRegister(this.instance, this);
 	        	break;
 			case CHECKED_IN:
+		        Sound.SIGN_IN.play();
+		        instance.getBaseGUI().getButtonByID(this.buttonPressed).setEnabled(false);
+		        instance.sendDisappearingConfirm("Checked out<br>Practice Room " + this.instance.getBaseGUI().getPressedButtonID() + "!", 115);
 				break;
 			case CHECKED_OUT:
+	            Sound.SIGN_OUT.play();
+	            int room = Utils.parseInt(resultpacket.getData(), -1);
+	            if (room == -1) {
+		            Sound.ERROR.play();
+		            this.instance.sendMessage("An unexpected error occured.<br>Please try again.", 65);
+		            return;
+	            }
+	            
+	            instance.getBaseGUI().getButtonByID(room).setEnabled(true);
+	            instance.getBaseGUI().setTimeForRoom(room, null);
+	            instance.sendDisappearingConfirm("Returned<br>Practice Room " + room + "!", 115);
 				break;
 			case ERROR:
+	            Sound.ERROR.play();
+	            this.instance.sendMessage("An unexpected error occured.<br>Please check internet connection.", 65);
 				break;
         }
         
@@ -142,8 +205,10 @@ public class GUIBase extends GUI implements ActionListener {
     
     /**
      * Do the action pressed by the current button.
+     * THIS IS CURRENTLY UNUSED.
      * @param usd The user.
      */
+    @Deprecated
     public void confirmAction(User usd) {
         if (this.getPressedButtonID() == 0) {
             return;
@@ -183,7 +248,7 @@ public class GUIBase extends GUI implements ActionListener {
         }
         
         // sign in
-        IO.scan(usd, this.buttonPressed);
+        this.scanID(usd.getHopkinsID());
         
         // reset button selection
         this.setPressedButton(null);
