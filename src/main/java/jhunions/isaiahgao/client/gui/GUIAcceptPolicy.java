@@ -94,7 +94,7 @@ public class GUIAcceptPolicy extends GUI implements ActionListener, WindowListen
                 
                 if (this.saveToDB) {
                 	if (!IO.push(usd).get()) {
-                        this.instance.sendDisappearingConfirm("Failed to check out practice room.<br>Maybe the internet is down?", 115);
+                        this.instance.sendDisappearingConfirm("Failed to check out practice room.<br>Maybe the internet is down?", 40);
                         Sound.REGISTER_UNSUCCESSFUL.play();
                         return;
                 	}
@@ -124,7 +124,7 @@ public class GUIAcceptPolicy extends GUI implements ActionListener, WindowListen
     @Override
     public void windowClosed(WindowEvent e) {
         if (!accepted)
-            this.instance.sendMessage("You cannot use the practice rooms<br>unless you agree to our policies.", 50);
+            this.instance.sendMessage("You cannot use the practice rooms<br>unless you agree to our policies.", 40);
     }
 
     @Override
