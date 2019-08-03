@@ -537,7 +537,7 @@ public class GUIBase extends GUI implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getActionCommand().equals("refresh") && System.currentTimeMillis() - this.lastSync > 10000) {
             this.lastSync = System.currentTimeMillis();
-            IO.synchronize();
+            GUIBase.this.synchronize();
         }
     }
 

@@ -97,11 +97,6 @@ public class IO {
 		});
 	}
 	
-
-	public static void synchronize() {
-		
-	}
-
 	public static void enableRoom(int room) {
 		// TODO Auto-generated method stub
 		

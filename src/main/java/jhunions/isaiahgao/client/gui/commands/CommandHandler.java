@@ -73,7 +73,7 @@ public class CommandHandler {
         commands.put("d", disable);
         
         Command refresh = (args) -> {
-        	IO.synchronize();
+        	instance.getBaseGUI().synchronize();
             return "Refreshed rooms";
         };
         commands.put("refresh", refresh);
