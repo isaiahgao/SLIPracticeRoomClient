@@ -27,7 +27,7 @@ public class CommandHandler {
                 int room = Integer.parseInt(args[1]);
                 instance.getBaseGUI().getButtonByID(room).setEnabled(true);
                 IO.enableRoom(room);
-                instance.getBaseGUI().setTimeForRoom(room, null);
+                instance.getBaseGUI().setTimeForRoom(room, -1);
                 return "Enabled room " + args[1];
             } catch (NumberFormatException e) {
                 return "Invalid room specified: " + args[1];
@@ -60,7 +60,7 @@ public class CommandHandler {
                 instance.getBaseGUI().getButtonByID(room).setEnabled(false);
                 IO.disableRoom(room, reason);
                 
-                instance.getBaseGUI().setTimeForRoom(room, reason);
+                instance.getBaseGUI().setTimeForRoom(room, 9999, reason);
                 return "Disabled room " + args[1] + " with reason \"" + reason + "\"";
             } catch (NumberFormatException e) {
                 return "Invalid room specified: " + args[1];

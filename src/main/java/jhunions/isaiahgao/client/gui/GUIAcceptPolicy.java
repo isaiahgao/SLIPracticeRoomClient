@@ -90,8 +90,6 @@ public class GUIAcceptPolicy extends GUI implements ActionListener, WindowListen
             this.frame.dispose();
         } else if (e.getActionCommand().equals("ok")) {
             try {
-                String msg = "Checked out<br>Practice Room " + this.instance.getBaseGUI().getPressedButtonID() + "!";
-                
                 if (this.saveToDB) {
                 	if (!IO.push(usd).get()) {
                         this.instance.sendDisappearingConfirm("Failed to check out practice room.<br>Maybe the internet is down?", 40);
@@ -100,10 +98,9 @@ public class GUIAcceptPolicy extends GUI implements ActionListener, WindowListen
                 	}
                     Sound.REGISTER_SUCCESSFUL.play();
                 }
-                this.instance.getBaseGUI().scanID(usd.getHopkinsID());
                 this.accepted = true;
                 this.frame.dispose();
-                this.instance.sendDisappearingConfirm(msg, 115);
+                this.instance.getBaseGUI().scanID(usd.getHopkinsID());
             } catch (Exception ex) {
             	ex.printStackTrace();
                 this.instance.sendMessage("Invalid info. Please try again.");

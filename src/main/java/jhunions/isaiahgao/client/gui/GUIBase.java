@@ -7,8 +7,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -19,11 +19,15 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.KeyStroke;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import jhunions.isaiahgao.client.Graphics.PracticeRoomButton;
 import jhunions.isaiahgao.client.IO;
+import jhunions.isaiahgao.client.IO.RequestType;
+import jhunions.isaiahgao.client.IO.Response;
 import jhunions.isaiahgao.client.Main;
 import jhunions.isaiahgao.client.SoundHandler.Sound;
 import jhunions.isaiahgao.client.Utils;
-import jhunions.isaiahgao.client.Graphics.PracticeRoomButton;
 import jhunions.isaiahgao.client.data.InputCollector;
 import jhunions.isaiahgao.client.listener.PRButtonListener;
 import jhunions.isaiahgao.common.ScanResultPacket;
@@ -51,6 +55,7 @@ public class GUIBase extends GUI implements ActionListener {
         super(instance, "JHUnions Practice Rooms v1.1.0", 1280, 1024, JFrame.EXIT_ON_CLOSE, true);
         this.setBackground(new Color(18, 18, 42));
         //this.frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        
     }
 
     private InputCollector in;
@@ -70,6 +75,25 @@ public class GUIBase extends GUI implements ActionListener {
     
     private long lastSync;
     private String curId;
+    
+    public void synchronize() {
+        // sync with server
+        try {
+        	Response response = IO.sendRequest(RequestType.PUT, "/rooms");
+        	if (response.code != 200) {
+        		throw new IllegalStateException();
+        	}
+        	
+        	JsonNode json = Main.getJson().readTree(response.result).get("rooms");
+        	for (Iterator<Map.Entry<String, JsonNode>> it = json.fields(); it.hasNext();) {
+        		Map.Entry<String, JsonNode> entry = it.next();
+        		int value = entry.getValue().get("remaining").asInt();
+        		this.setTimeForRoom(Integer.parseInt(entry.getKey()), value);
+        	}
+        } catch (Exception e) {
+            //this.instance.sendMessage("Failed to connect to server.<br>Vital functions will not work.");
+        }
+    }
     
     public JLabel getManualLabel() {
         return this.isManual;
@@ -155,12 +179,14 @@ public class GUIBase extends GUI implements ActionListener {
 	        case NO_SUCH_USER:
 	        	new GUIPromptRegister(this.instance, this);
 	        	break;
-			case CHECKED_IN:
+			case CHECKED_OUT:
 		        Sound.SIGN_IN.play();
-		        instance.getBaseGUI().getButtonByID(this.buttonPressed).setEnabled(false);
+		        this.getButtonByID(this.buttonPressed).setEnabled(false);
+	            this.setTimeForRoom(this.buttonPressed, 90);
+	            this.setPressedButton(null);
 		        instance.sendDisappearingConfirm("Checked out<br>Practice Room " + this.instance.getBaseGUI().getPressedButtonID() + "!", 115);
 				break;
-			case CHECKED_OUT:
+			case CHECKED_IN:
 	            Sound.SIGN_OUT.play();
 	            int room = Utils.parseInt(resultpacket.getData(), -1);
 	            if (room == -1) {
@@ -169,8 +195,8 @@ public class GUIBase extends GUI implements ActionListener {
 		            return;
 	            }
 	            
-	            instance.getBaseGUI().getButtonByID(room).setEnabled(true);
-	            instance.getBaseGUI().setTimeForRoom(room, null);
+	            this.getButtonByID(room).setEnabled(true);
+	            this.setTimeForRoom(room, -1);
 	            instance.sendDisappearingConfirm("Returned<br>Practice Room " + room + "!", 115);
 				break;
 			case ERROR:
@@ -473,9 +499,38 @@ public class GUIBase extends GUI implements ActionListener {
         return Utils.format("<font color=\"white\">" + s + "</font>", 20, "Corbel", true);
     }
     
-    public void setTimeForRoom(int room, String time) {
+    public void setTimeForRoom(int room, int minutesLeft) {
+    	setTimeForRoom(room, minutesLeft, (String) null);
+    }
+    
+    public void setTimeForRoom(int room, int minutesLeft, String optional) {
         JButton butt = this.getButtonByID(room);
-        butt.setText(this.getTitle(room, time));
+        String amt = "";
+        
+		switch (minutesLeft) {
+		case 0:
+			amt = "<strong>TIME EXPIRED</strong>";
+			break;
+		case -1:
+			break;
+		case 9999:
+			amt = "<strong>Unavailable</strong> > " + optional;
+			break;
+		default:
+	        String s = "<strong>Time remaining:</strong> ";
+			amt = s + amt + " minute" + (Integer.parseInt(amt) > 1 ? "s" : "");
+			break;
+		}
+        
+        butt.setText(this.getTitle(room, amt));
+    }
+    
+    public void setTimeForRoom(int room, int minutesLeft, JsonNode optional) {
+    	if (optional != null && optional.has("reason")) {
+    		setTimeForRoom(room, minutesLeft, optional.get("reason"));
+    		return;
+    	}
+    	setTimeForRoom(room, minutesLeft, (String) null);
     }
 
     @Override

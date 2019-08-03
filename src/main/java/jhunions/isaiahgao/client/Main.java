@@ -25,6 +25,13 @@ public final class Main {
         instance.base = new GUIBase(instance);
 
         handlerCommands = new CommandHandler(instance);
+
+        Main.TIMER.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                instance.getBaseGUI().synchronize();
+            }
+        }, 1l, 10000l);
     }
     
     public static CommandHandler getCommandHandler() {
