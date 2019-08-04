@@ -55,7 +55,7 @@ public class GUIBase extends GUI implements ActionListener {
         super(instance, "JHUnions Practice Rooms v1.1.0", 1280, 1024, JFrame.EXIT_ON_CLOSE, true);
         this.setBackground(new Color(18, 18, 42));
         //this.frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        
+        this.synchronize();
     }
 
     private InputCollector in;
@@ -95,6 +95,7 @@ public class GUIBase extends GUI implements ActionListener {
         	}
         } catch (Exception e) {
             //this.instance.sendMessage("Failed to connect to server.<br>Vital functions will not work.");
+        	e.printStackTrace();
         }
     }
     
@@ -186,8 +187,8 @@ public class GUIBase extends GUI implements ActionListener {
 		        Sound.SIGN_IN.play();
 		        this.getButtonByID(this.buttonPressed).setEnabled(false);
 	            this.setTimeForRoom(this.buttonPressed, 90);
-	            this.setPressedButton(null);
 		        instance.sendDisappearingConfirm("Checked out<br>Practice Room " + this.instance.getBaseGUI().getPressedButtonID() + "!", 115);
+	            this.setPressedButton(null);
 				break;
 			case CHECKED_IN:
 	            Sound.SIGN_OUT.play();
@@ -207,29 +208,6 @@ public class GUIBase extends GUI implements ActionListener {
 	            this.instance.sendMessage("An unexpected error occured.<br>Please check internet connection.", 65);
 				break;
         }
-        
-        //TODO need to use Futures
-//        if (Main.getRoomHandler().usingRoom(id)) {
-//            // sign out if using a room
-//            Main.getRoomHandler().scan(Main.getRoomHandler().getUserInstance(id).getUser(), 0);
-//            this.setPressedButton(null);
-//            return;
-//        }
-//        
-//        JButton pressed = this.getPressedButton();
-//        if (pressed == null) {
-//            this.instance.sendMessage("Please choose a practice room,<br><i>then</i> swipe your JCard!", 65);
-//            return;
-//        }
-//        
-//        UserData data = Main.getUserHandler().getUserData(id);
-//        if (data == null) {
-//            // no user exists, prompt them to register
-//            new GUIPromptRegister(this.instance, this);
-//            return;
-//        }
-//        
-//        this.confirmAction(data);
     }
     
     /**
@@ -510,24 +488,24 @@ public class GUIBase extends GUI implements ActionListener {
         JButton butt = this.getButtonByID(room);
         String amt = "";
         
-        if (optional != null) {
-			amt = "<strong>Unavailable</strong> > " + optional;
-        } else {
-			switch (minutesLeft) {
-			case 0:
-				amt = "<strong>TIME EXPIRED</strong>";
-				break;
-			case -1:
-				break;
-			case 9999:
-				amt = "<strong>Unavailable</strong>";
-				break;
-			default:
-		        String s = "<strong>Time remaining:</strong> ";
-				amt = s + amt + " minute" + (Integer.parseInt(amt) > 1 ? "s" : "");
-				break;
-			}
-        }
+		switch (minutesLeft) {
+		case 0:
+			amt = "<strong>TIME EXPIRED</strong>";
+			butt.setEnabled(false);
+			break;
+		case -1:
+			butt.setEnabled(true);
+			break;
+		case 9999:
+			amt = "<strong>UNAVAILABLE</strong>" + (optional == null || optional.isEmpty() || optional.equals("null") ? "" : ": " + optional);
+			butt.setEnabled(false);
+			break;
+		default:
+	        String s = "<strong>Time remaining:</strong> ";
+			amt = s + minutesLeft + " minute" + (minutesLeft > 1 ? "s" : "");
+			butt.setEnabled(false);
+			break;
+		}
         
         butt.setText(this.getTitle(room, amt));
     }
