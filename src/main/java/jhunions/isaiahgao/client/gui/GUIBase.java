@@ -87,8 +87,11 @@ public class GUIBase extends GUI implements ActionListener {
         	JsonNode json = Main.getJson().readTree(response.result).get("rooms");
         	for (Iterator<Map.Entry<String, JsonNode>> it = json.fields(); it.hasNext();) {
         		Map.Entry<String, JsonNode> entry = it.next();
-        		int value = entry.getValue().get("remaining").asInt();
-        		this.setTimeForRoom(Integer.parseInt(entry.getKey()), value);
+        		
+        		JsonNode valuenode = entry.getValue();
+        		int value = valuenode.get("remaining").asInt();
+        		String reason = valuenode.has("reason") ? valuenode.get("reason").asText() : null;
+        		this.setTimeForRoom(Integer.parseInt(entry.getKey()), value, reason);
         	}
         } catch (Exception e) {
             //this.instance.sendMessage("Failed to connect to server.<br>Vital functions will not work.");
@@ -507,20 +510,24 @@ public class GUIBase extends GUI implements ActionListener {
         JButton butt = this.getButtonByID(room);
         String amt = "";
         
-		switch (minutesLeft) {
-		case 0:
-			amt = "<strong>TIME EXPIRED</strong>";
-			break;
-		case -1:
-			break;
-		case 9999:
+        if (optional != null) {
 			amt = "<strong>Unavailable</strong> > " + optional;
-			break;
-		default:
-	        String s = "<strong>Time remaining:</strong> ";
-			amt = s + amt + " minute" + (Integer.parseInt(amt) > 1 ? "s" : "");
-			break;
-		}
+        } else {
+			switch (minutesLeft) {
+			case 0:
+				amt = "<strong>TIME EXPIRED</strong>";
+				break;
+			case -1:
+				break;
+			case 9999:
+				amt = "<strong>Unavailable</strong>";
+				break;
+			default:
+		        String s = "<strong>Time remaining:</strong> ";
+				amt = s + amt + " minute" + (Integer.parseInt(amt) > 1 ? "s" : "");
+				break;
+			}
+        }
         
         butt.setText(this.getTitle(room, amt));
     }

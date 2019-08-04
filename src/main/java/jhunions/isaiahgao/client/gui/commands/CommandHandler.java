@@ -25,10 +25,13 @@ public class CommandHandler {
             
             try {
                 int room = Integer.parseInt(args[1]);
-                instance.getBaseGUI().getButtonByID(room).setEnabled(true);
-                IO.enableRoom(room);
-                instance.getBaseGUI().setTimeForRoom(room, -1);
-                return "Enabled room " + args[1];
+                boolean successful = IO.enableRoom(room).get();
+                if (successful) {
+	                instance.getBaseGUI().getButtonByID(room).setEnabled(true);
+	                instance.getBaseGUI().setTimeForRoom(room, -1);
+	                return "Enabled room " + args[1];
+                }
+                return "ERROR: failed to enable room " + args[1] + ". Maybe the internet is down?";
             } catch (NumberFormatException e) {
                 return "Invalid room specified: " + args[1];
             } catch (Exception e) {
@@ -47,9 +50,9 @@ public class CommandHandler {
             try {
                 int room = Integer.parseInt(args[1]);
                 
-                String reason = args.length < 3 ? "UNAVAILABLE" : args[2];
+                String reason = args.length < 3 ? null : args[2];
                 if (args.length < 3) {
-                    reason = "UNAVAILABLE";
+                    reason = null;
                 } else {
                     reason = args[2];
                     for (int i = 3; i < args.length; i++) {
@@ -57,11 +60,14 @@ public class CommandHandler {
                     }
                 }
                 
-                instance.getBaseGUI().getButtonByID(room).setEnabled(false);
-                IO.disableRoom(room, reason);
-                
-                instance.getBaseGUI().setTimeForRoom(room, 9999, reason);
-                return "Disabled room " + args[1] + " with reason \"" + reason + "\"";
+                boolean successful = IO.disableRoom(room, reason).get();
+
+                if (successful) {
+	                instance.getBaseGUI().getButtonByID(room).setEnabled(false);
+	                instance.getBaseGUI().setTimeForRoom(room, 9999, reason);
+	                return "Disabled room " + args[1] + " with reason \"" + reason + "\"";
+                }
+                return "ERROR: failed to disable room " + args[1] + ". Maybe the internet is down?";
             } catch (NumberFormatException e) {
                 return "Invalid room specified: " + args[1];
             } catch (Exception e) {

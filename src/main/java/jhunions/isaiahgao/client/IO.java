@@ -89,7 +89,7 @@ public class IO {
 	public static Future<ScanResultPacket> scanId(String id, String room) {
 		return EXE.submit(() -> {
 			try {
-				String result = sendRequest(RequestType.POST, "/rooms/" + room, "{\"cardnumber\":\"" + id + "\"," + Main.getAuthHandler().getAuthJson() + "}").result;
+				String result = sendRequest(RequestType.POST, "/rooms/" + room, "{\"type\":\"scan\",\"cardnumber\":\"" + id + "\"," + Main.getAuthHandler().getAuthJson() + "}").result;
 				return new ScanResultPacket(result);
 			} catch (Exception e) {
 				return new ScanResultPacket(ScanResult.ERROR, null);
@@ -97,14 +97,26 @@ public class IO {
 		});
 	}
 	
-	public static void enableRoom(int room) {
-		// TODO Auto-generated method stub
-		
+	public static Future<Boolean> enableRoom(int room) {
+		return EXE.submit(() -> {
+			try {
+				int code = sendRequest(RequestType.POST, "/rooms/" + room, "{\"type\":\"enable\"," + Main.getAuthHandler().getAuthJson() + "}").code;
+				return code >= 200 && code < 300;
+			} catch (Exception e) {
+				return false;
+			}
+		});
 	}
 
-	public static void disableRoom(int room, String reason) {
-		// TODO Auto-generated method stub
-		
+	public static Future<Boolean> disableRoom(int room, String reason) {
+		return EXE.submit(() -> {
+			try {
+				int code = sendRequest(RequestType.POST, "/rooms/" + room, "{\"type\":\"disable\"," + (reason == null ? "" : "\"reason\":\"" + reason + "\",") + Main.getAuthHandler().getAuthJson() + "}").code;
+				return code >= 200 && code < 300;
+			} catch (Exception e) {
+				return false;
+			}
+		});
 	}
 
 	public static Future<Boolean> push(User usd) {
