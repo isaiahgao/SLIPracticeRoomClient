@@ -1,10 +1,12 @@
 package jhunions.isaiahgao.client.gui.commands;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
 import jhunions.isaiahgao.client.IO;
 import jhunions.isaiahgao.client.Main;
+import jhunions.isaiahgao.client.gui.GUIBase;
 
 public class CommandHandler {
     
@@ -18,6 +20,24 @@ public class CommandHandler {
     private Map<String, Command> commands;
     
     private void load() {
+    	commands.put("testscan", (args) -> {
+    		int room = 112;
+    		if (args.length > 1) {
+    			room = Integer.parseInt(args[1]);
+    		}
+    		
+    		try {
+    			Field f = GUIBase.class.getDeclaredField("buttonPressed");
+    			f.setAccessible(true);
+    			f.set(instance.getBaseGUI(), room);
+                instance.getBaseGUI().scanID("6010675001431720");
+                return "Simulated ID scan on room " + room;
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    			return "An unexpected error occurred";
+    		}
+    	});
+    	
         Command enable = (args) -> {
             if (args.length < 2) {
                 return "Not enough args. > enable [RoomNo]";
