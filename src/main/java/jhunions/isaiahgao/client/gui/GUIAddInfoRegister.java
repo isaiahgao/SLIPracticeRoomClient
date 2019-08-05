@@ -27,7 +27,7 @@ public class GUIAddInfoRegister extends GUIAddInfo {
     @Override
     protected void setup() {
         super.setup();
-        this.textTitle.setBounds(70, 30, 370, 100);
+        this.textTitle.setBounds(90, 30, 370, 100);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class GUIAddInfoRegister extends GUIAddInfo {
             if (this.argsFilled()) {
                 // only accept if they've filled all areas
                 if (this.promptPhoneNumber.getText().length() != 10) {
-                    this.instance.sendMessage("Invalid phone number.");
+                    this.instance.sendMessage("Invalid phone number.", 100);
                     return;
                 }
                 
@@ -46,13 +46,13 @@ public class GUIAddInfoRegister extends GUIAddInfo {
                     final User usd = new User(userId, new FullName(promptFirstName.getText(), promptLastName.getText()), promptJHED.getText(), Long.parseLong(promptPhoneNumber.getText()));
                     String error = usd.checkForErrors();
                     if (error != null) {
-                        this.instance.sendMessage("<strong>Registration failed:</strong><br>" + error);
+                        this.instance.sendMessage("<strong>Registration failed:</strong><br>" + error, 100);
                         return;
                     }
                     
                     new GUIAcceptPolicy(this.instance, this, usd, true);
                 } catch (Exception ex) {
-                    this.instance.sendMessage("Invalid info. Please try again.");
+                    this.instance.sendMessage("Invalid info. Please try again.", 100);
                 }
                 return;
             }
