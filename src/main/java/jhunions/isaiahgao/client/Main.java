@@ -31,7 +31,7 @@ public final class Main {
             public void run() {
                 instance.getBaseGUI().synchronize();
             }
-        }, 1l, 10000l);
+        }, 10000l, 10000l);
     }
     
     public static CommandHandler getCommandHandler() {
