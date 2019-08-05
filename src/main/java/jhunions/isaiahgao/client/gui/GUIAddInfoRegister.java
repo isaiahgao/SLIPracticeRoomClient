@@ -44,6 +44,12 @@ public class GUIAddInfoRegister extends GUIAddInfo {
                 
                 try {
                     final User usd = new User(userId, new FullName(promptFirstName.getText(), promptLastName.getText()), promptJHED.getText(), Long.parseLong(promptPhoneNumber.getText()));
+                    String error = usd.checkForErrors();
+                    if (error != null) {
+                        this.instance.sendMessage("<strong>Registration failed:</strong><br>" + error);
+                        return;
+                    }
+                    
                     new GUIAcceptPolicy(this.instance, this, usd, true);
                 } catch (Exception ex) {
                     this.instance.sendMessage("Invalid info. Please try again.");

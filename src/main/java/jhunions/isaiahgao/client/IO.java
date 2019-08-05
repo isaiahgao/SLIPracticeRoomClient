@@ -21,8 +21,12 @@ import jhunions.isaiahgao.common.ScanResultPacket.ScanResult;
 import jhunions.isaiahgao.common.User;
 
 public class IO {
+
+	private static final String REAL_HOST = "http://158.69.201.116:7000";
+	private static final String LOCALHOST = "http://localhost:7000";
 	
-	private static final String HOST = "http://localhost:7000";
+	private static final String HOST = REAL_HOST;
+	
 	private static final String USER_AGENT = "Mozilla/5.0";
 	private static final ExecutorService EXE = Executors.newSingleThreadExecutor();
 	
