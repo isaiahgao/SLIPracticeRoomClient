@@ -71,9 +71,9 @@ public class IO {
 		}
 		 
 		int responseCode = con.getResponseCode();
-		System.out.println("\nSending " + type.toString() + " request to URL : " + HOST);
-		System.out.println("Body: " + body);
-		System.out.println("Response Code : " + responseCode);
+//		System.out.println("\nSending " + type.toString() + " request to URL : " + HOST);
+//		System.out.println("Body: " + body);
+//		System.out.println("Response Code : " + responseCode);
 
 		BufferedReader in = new BufferedReader(
 		        new InputStreamReader(con.getInputStream()));
@@ -86,7 +86,7 @@ public class IO {
 		in.close();
 
 		String result = response.toString();
-		System.out.println(result);
+//		System.out.println(result);
 		return new Response(responseCode, result);
 	}
 	
