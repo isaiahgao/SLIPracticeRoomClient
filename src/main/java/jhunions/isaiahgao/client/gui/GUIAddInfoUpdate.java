@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutionException;
 import jhunions.isaiahgao.client.IO;
 import jhunions.isaiahgao.client.Main;
 import jhunions.isaiahgao.client.Utils;
+import jhunions.isaiahgao.client.SoundHandler.Sound;
 import jhunions.isaiahgao.common.FullName;
 import jhunions.isaiahgao.common.User;
 
@@ -47,7 +48,18 @@ public class GUIAddInfoUpdate extends GUIAddInfo {
                 // only accept if they've filled all areas
                 try {
                     User usd = new User(userId, new FullName(promptFirstName.getText(), promptLastName.getText()), promptJHED.getText(), Long.parseLong(promptPhoneNumber.getText()));
-                    IO.push(usd);
+                    String error = usd.checkForErrors();
+                    if (error != null) {
+                        this.instance.sendMessage("<strong>Registration failed:</strong><br>" + error, 100);
+                        return;
+                    }
+
+                	if (!IO.push(usd).get()) {
+                        this.instance.sendDisappearingConfirm("Failed to update information.<br>Maybe the internet is down?", 40);
+                        Sound.ERROR.play();
+                        return;
+                	}
+                	
                     // TODO call add function from base
                     this.instance.sendMessage("You have successfully updated your information!", this.frame);
                 } catch (Exception ex) {
