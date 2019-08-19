@@ -134,6 +134,10 @@ public class GUIBase extends GUI implements ActionListener {
     }
     
     public void scanID(String id) {
+    	scanID(null, id);
+    }
+    
+    public void scanID(User user, String id) {
         System.out.println("Scanned ID: " + id);
         this.curId = id;
         
@@ -174,7 +178,7 @@ public class GUIBase extends GUI implements ActionListener {
         // otherwise, try to sign in
         ScanResultPacket resultpacket;
         try {
-        	resultpacket = IO.scanId(id, this.buttonPressed + "").get();
+        	resultpacket = user == null ? IO.scanId(id, this.buttonPressed + "").get() : IO.scanUser(user, this.buttonPressed + "").get();
         } catch (Exception e) {
         	resultpacket = ScanResultPacket.ERROR;
         }

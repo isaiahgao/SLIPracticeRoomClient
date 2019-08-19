@@ -43,7 +43,8 @@ public class IO {
 	public enum RequestType {
 		POST,
 		PUT,
-		DELETE
+		DELETE,
+		GET
 	}
 	
 	public static Response sendRequest(RequestType type, String urlpath) throws Exception {
@@ -94,6 +95,19 @@ public class IO {
 		return EXE.submit(() -> {
 			try {
 				String result = sendRequest(RequestType.POST, "/rooms/" + room, "{\"type\":\"scan\",\"cardnumber\":\"" + id + "\"," + Main.getAuthHandler().getAuthJson() + "}").result;
+				return new ScanResultPacket(result);
+			} catch (Exception e) {
+				return new ScanResultPacket(ScanResult.ERROR, null);
+			}
+		});
+	}
+
+	public static Future<ScanResultPacket> scanUser(User user, String room) {
+		return EXE.submit(() -> {
+			try {
+				String body = "{\"type\":\"scan\",\"user\":" + user.toString() + "," + Main.getAuthHandler().getAuthJson() + "}";
+				System.out.println(body);
+				String result = sendRequest(RequestType.POST, "/rooms/" + room, body).result;
 				return new ScanResultPacket(result);
 			} catch (Exception e) {
 				return new ScanResultPacket(ScanResult.ERROR, null);

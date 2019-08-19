@@ -1,12 +1,39 @@
 package jhunions.isaiahgao.client.data;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import jhunions.isaiahgao.client.IO;
+import jhunions.isaiahgao.client.IO.RequestType;
+import jhunions.isaiahgao.client.IO.Response;
+import jhunions.isaiahgao.client.Main;
 import jhunions.isaiahgao.client.gui.GUIBase;
+import jhunions.isaiahgao.common.IDFormat;
 
 public class InputCollector {
     
 	// used to know when to stop collecting input
-    private static final int ID_LENGTH = 15;
-    private static final int GRAD_ID_LENGTH = 11;
+    private static int ID_LENGTH = 19;
+    private static int IGNORE_FIRST = 4;
+    private static int GRAD_ID_LENGTH = 15;
+    private static int IGNORE_FIRST_GRAD = 4;
+    
+    public static void reloadFormat() {
+    	try {
+			Response response = IO.sendRequest(RequestType.PUT, "/format", "{" + Main.getAuthHandler().getAuthJson() + "}");
+			if (response.code == 200) {
+				JsonNode node = Main.getJson().readTree(response.result);
+				IDFormat norm = new IDFormat(node.get("undergrad"));
+				IDFormat grad = new IDFormat(node.get("grad"));
+				
+				ID_LENGTH = norm.getTotalLength();
+				IGNORE_FIRST = norm.getIgnoreFirst();
+				GRAD_ID_LENGTH = grad.getTotalLength();
+				IGNORE_FIRST_GRAD = grad.getIgnoreFirst();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
 
     public InputCollector(GUIBase base) {
         this.empty();
@@ -115,7 +142,15 @@ public class InputCollector {
 
     @Override
     public String toString() {
-        return this.buf.toString();
+        String result = this.buf.toString();
+        if (this.isGradStudent && IGNORE_FIRST_GRAD > 0) {
+        	return result.substring(IGNORE_FIRST_GRAD);
+        }
+        
+        if (!this.isGradStudent && IGNORE_FIRST > 0) {
+        	return result.substring(IGNORE_FIRST);
+        }
+        return result;
     }
 
     public boolean isEmpty() {

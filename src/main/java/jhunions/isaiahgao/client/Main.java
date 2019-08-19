@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jhunions.isaiahgao.client.data.InputCollector;
 import jhunions.isaiahgao.client.gui.GUI;
 import jhunions.isaiahgao.client.gui.GUIBase;
 import jhunions.isaiahgao.client.gui.GUIConfirm;
@@ -23,13 +24,19 @@ public final class Main {
     public static void main(String[] args) {
         instance = new Main();
         instance.base = new GUIBase(instance);
+    	InputCollector.reloadFormat();
 
         handlerCommands = new CommandHandler(instance);
 
         Main.TIMER.scheduleAtFixedRate(new TimerTask() {
-            @Override
+            int cycle = 0;
+        	
+        	@Override
             public void run() {
                 instance.getBaseGUI().synchronize();
+                if (cycle % 2 == 0)
+                	InputCollector.reloadFormat();
+                ++cycle;
             }
         }, 10000l, 10000l);
     }
